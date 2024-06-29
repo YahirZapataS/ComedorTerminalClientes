@@ -1,0 +1,146 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 800px;
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#btn_addClient {
+    background-color: rgb(2, 104, 2);
+}
+
+#btn_addBuy {
+    background-color: grey;
+}
+
+#agregarProducto {
+    background-color: rgb(2, 104, 2);
+}
+
+#addBuy {
+    background-color: rgb(1, 1, 165);
+}
+
+#backTo {
+    background-color: rgb(131, 8, 8);
+    font-size: 15px;
+}
+
+.eliminarProductoBtn {
+    background-color: rgb(131, 8, 8);
+    font-size: 15px;
+}
+
+#verCuentaBtn {
+    background-color: rgb(2, 104, 2);
+}
+
+#agregarCompraBtn {
+    background-color: rgb(131, 8, 8);
+}
+
+#verTodos {
+    margin-top: 30px;
+    background-color: rgb(131, 8, 8);
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+form {
+    margin: 20px 0;
+}
+
+label {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin: 5px 0;
+    border: 5px solid #ccc;
+    border-radius: 5px;
+}
+
+#busquedas {
+    margin: 20px 0;
+    text-align: center;
+}
+
+#busquedas input {
+    width: calc(50% - 22px);
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#clientes {
+    list-style: none;
+    padding: 0;
+}
+
+#clientes li {
+    background-color: #f9f9f9;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 30;
+    font-weight: bold;
+}
+
+#contenido {
+    margin-top: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+input:placeholder-shown {
+    font-size: 20px;
+}
+
+#sinTelefono {
+    width: 15px;
+    height: 15px;
+}
+
+li {
+    font-size: 25px;
+}
