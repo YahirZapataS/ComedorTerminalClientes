@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "firebase": "^10.12.2",
-    "sweetalert2": "^11.12.0"
-  }
-}
