@@ -113,8 +113,45 @@ class GestorClientes {
         } else {
             this.actualizarListaResultados(resultados);
         }
-    }    
+    }
 
+    async buscarClientesId(id) {
+        if (!id.trim()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campo de búsqueda vacío',
+                text: 'Por favor indique un número de ID válido.',
+            });
+            return;
+        }
+    
+        if (this.clientes.length === 0) {
+            await this.cargarClientes();
+        }
+    
+        const clienteId = parseInt(id);
+        if (isNaN(clienteId)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ID inválido',
+                text: 'El ID debe ser un número.',
+            });
+            return;
+        }
+    
+        const resultados = this.clientes.filter(cliente => cliente.id === clienteId);
+    
+        if (resultados.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'No se encontraron resultados',
+                text: 'No se encontró ningún cliente con ese ID.',
+            });
+        } else {
+            this.actualizarListaResultados(resultados);
+        }
+    }
+    
     actualizarListaResultados(resultados) {
         const clientesUl = document.getElementById('clientes');
         clientesUl.innerHTML = '';
@@ -135,45 +172,60 @@ class GestorClientes {
             agregarCompraBtn.addEventListener('click', () => window.location.href = `agregar_compra.html?clienteId=${cliente.id}`);
             li.appendChild(agregarCompraBtn);
 
+            const pagarCuentaBtn = document.createElement('button');
+            pagarCuentaBtn.textContent = 'Pagar Cuenta';
+            pagarCuentaBtn.id = 'pagarCuentaBtn';
+            pagarCuentaBtn.addEventListener('click', () => window.location.href = `pagarCuenta.html?clienteId=${cliente.id}`);
+            li.appendChild(pagarCuentaBtn);
+
             clientesUl.appendChild(li);
         });
     }
 
-    verCuenta(clienteId) {
+    async verCuenta(clienteId) {
         const cliente = this.clientes.find(c => c.id === clienteId);
         if (!cliente) {
             console.error('Cliente no encontrado');
             return;
         }
-    
+
         const contenido = document.getElementById('contenido');
         contenido.innerHTML = `
             <h2>Compras de ${cliente.nombre}</h2>
-            <ul>
-                ${cliente.compras.map(compra => {
-                    const producto = compra.producto;
-                    const precio = producto.precio ? producto.precio.toFixed(2) : '0.00';
-                    const fechaFormateada = compra.fecha.toDateString();
-                    return `
-                        <li>
-                            Producto: ${producto.nombre} - 
-                            Precio: $${precio} - 
-                            Cantidad: ${compra.cantidad} -
-                            Fecha: ${fechaFormateada}
-                        </li>
-                    `;
-                }).join('')}
-            </ul>
-            <p>Total Cuenta: $${cliente.totalCuenta ? cliente.totalCuenta.toFixed(2) : '0.00'}</p>
-            <label for="montoPago">Monto a pagar:</label>
-            <input type="number" id="montoPago" name="montoPago">
-            <button id="btnPagarCuenta">Pagar Cuenta</button>
+            <table id='tablaCompras'>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Total</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${cliente.compras.map(compra => {
+                        const producto = compra.producto;
+                        const precio = producto.precio ? producto.precio.toFixed(2) : '0.00';
+                        const total = (producto.precio * compra.cantidad).toFixed(2);
+                        const fechaFormateada = new Date(compra.fecha).toDateString();
+                        return `
+                            <tr>
+                                <td>${producto.nombre}</td>
+                                <td>${compra.cantidad}</td>
+                                <td>$${precio}</td>
+                                <td>$${total}</td>
+                                <td>${fechaFormateada}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+            <p id = 'totalCuenta'>Total Cuenta: $${cliente.totalCuenta ? cliente.totalCuenta.toFixed(2) : '0.00'}</p>
             <button id="btnCerrarCuenta">Cerrar</button>
         `;
-    
-        document.getElementById('btnPagarCuenta').addEventListener('click', () => this.solicitarPago(cliente.id));
+
         document.getElementById('btnCerrarCuenta').addEventListener('click', () => this.cerrarCuenta());
-    
+
         if (cliente.totalCuenta > 1000) {
             Swal.fire({
                 icon: 'warning',
@@ -183,80 +235,6 @@ class GestorClientes {
         }
     }
 
-    async solicitarPago(clienteId) {
-        const clienteDocRef = doc(db, 'clientes', clienteId.toString());
-    
-        try {
-        
-            await runTransaction(db, async (transaction) => {
-                const clienteSnap = await transaction.get(clienteDocRef);
-    
-                if (!clienteSnap.exists()) {
-                    throw new Error('El cliente no existe en Firestore');
-                }
-    
-                const clienteData = clienteSnap.data();
-    
-            
-                const result = await Swal.fire({
-                    title: 'Ingrese el código de cajero',
-                    input: 'password',
-                    inputAttributes: {
-                        autocapitalize: 'off',
-                        autocorrect: 'off'
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: 'Pagar',
-                    showLoaderOnConfirm: true,
-                    preConfirm: async (codigo) => {
-                        const codigoCajeroCorrecto = '1234';
-                        if (codigo !== codigoCajeroCorrecto) {
-                            Swal.showValidationMessage('Código de cajero incorrecto');
-                        } else {
-                            const montoPago = parseFloat(document.getElementById('montoPago').value);
-                            if (isNaN(montoPago) || montoPago <= 0) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Ingrese un monto válido para pagar la cuenta',
-                                });
-                            } else {
-                            
-                                const nuevoTotalCuenta = clienteData.totalCuenta - montoPago;
-                                const fechaPago = new Date().toISOString();
-    
-                                transaction.update(clienteDocRef, {
-                                    totalCuenta: nuevoTotalCuenta,
-                                    fechaUltimoPago: fechaPago
-                                });
-    
-                                return { montoPago, fechaPago };
-                            }
-                        }
-                    },
-                    allowOutsideClick: () => !Swal.isLoading()
-                });
-    
-            
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Éxito',
-                        text: 'Cuenta pagada correctamente.',
-                    }).then(() => {
-                        this.verCuenta(clienteId);
-                    });
-                }
-            });
-        } catch (error) {
-            console.error('Error al actualizar la cuenta:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo actualizar la cuenta',
-            });
-        }
-    }       
 
     mostrarTodosLosClientes() {
         const clientesUl = document.getElementById('clientes');
@@ -277,6 +255,12 @@ class GestorClientes {
             agregarCompraBtn.id = 'agregarCompraBtn';
             agregarCompraBtn.addEventListener('click', () => window.location.href = `agregar_compra.html?clienteId=${cliente.id}`);
             li.appendChild(agregarCompraBtn);
+
+            const pagarCuentaBtn = document.createElement('button');
+            pagarCuentaBtn.textContent = 'Pagar Cuenta';
+            pagarCuentaBtn.id = 'pagarCuentaBtn';
+            pagarCuentaBtn.addEventListener('click', () => window.location.href = `pagarCuenta.html?clienteId=${cliente.id}`);
+            li.appendChild(pagarCuentaBtn);
 
             clientesUl.appendChild(li);
         });
@@ -303,4 +287,9 @@ document.getElementById('verMenos').addEventListener('click', () => {
 document.getElementById('btnBuscar').addEventListener('click', function () {
     const nombre = document.getElementById('busquedaNombre').value;
     gestorClientes.buscarClientes(nombre);
+});
+
+document.getElementById('btnBuscarId').addEventListener('click', function () {
+    const id = document.getElementById('busquedaId').value;
+    gestorClientes.buscarClientesId(id);
 });
